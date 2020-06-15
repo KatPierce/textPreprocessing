@@ -9,7 +9,7 @@ from nltk import pos_tag
 from string import punctuation
 import re
 
-
+# https://stackoverflow.com/questions/15586721/wordnet-lemmatization-and-pos-tagging-in-python
 def get_wordnet_pos(treebank_tag):
     if treebank_tag.startswith('J'):
         return wordnet.ADJ
@@ -25,20 +25,23 @@ def get_wordnet_pos(treebank_tag):
 
 pdf_document = "article5.pdf"
 doc = fitz.open(pdf_document)
-print("number of pages: %i" % doc.pageCount)
+# print("number of pages: %i" % doc.pageCount)
 
 # print(doc.metadata)
-page1 = doc.loadPage(2)
-page1text = page1.getText("text")
+text = ""
+for i in range(0, doc.pageCount):
+    cur_page = doc.loadPage(i)
+    text = text+cur_page.getText("text")
+# print(text)
 # words = word_tokenize(page1text)
-page1text = re.sub("-\n", '', page1text)  # убираем  переносы
-test_string = filter(lambda i: i not in punctuation, page1text)  # убираем  знаки препинания
+text = re.sub("-\n", '', text)  # убираем  переносы
+test_string = filter(lambda i: i not in punctuation, text)  # убираем  знаки препинания
 test_string = "".join(test_string)
 words = re.split('\\s', test_string)  # парсим по пробелам и зн. табуляции
 stop_words = set(stopwords.words("english"))  # стоп-слова
-print(punctuation)
+# print(punctuation)
 sense_words = [word for word in words if not word in punctuation and not word in stop_words]  # !! убрать первое условие
-print(sense_words)
+# print(sense_words)
 sense_words = [w.lower() for w in sense_words]
 lemmatizer = WordNetLemmatizer()
 lemmatized = []
@@ -49,9 +52,11 @@ for p in word_pos:
         if part != '' and len(part) > 0:
             lem = lemmatizer.lemmatize(p[0], pos=part)
             lemmatized.append(lem)
-            print(p[0], lem)
+            # print(p[0], lem)
         else:
             lemmatized.append(lemmatizer.lemmatize(p[0]))
     except KeyError:
         print("ERROR", part, p[0])
 # print(lemmatized)
+freq = nltk.FreqDist(lemmatized)
+print(freq.most_common(30))
