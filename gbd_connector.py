@@ -12,14 +12,29 @@ class GBDConnector:
         with self.driver.session() as session:
             tags = session.read_transaction(self._get_tags, word)
             for tag in tags:
-                print(tag)
+                print(tag, tags[tag])
+
+
 
     @staticmethod
     def _get_tags(tx, word):
-        people = []
+        tags = []
+        area = []
+        ind = []
         result = tx.run(
-            "MATCH (a:Person {surname:$word})-[:WRITES]->(m)<-[:WRITES]-(cowriters) RETURN cowriters.surname AS name",
+            "MATCH (a:KeyWord {title:$word})-[:MATCHES]->(tags),"
+            "(tags)-[:SPECIFIES]->(areas:ExpertiseAreas), "
+            "(tags)-[:SPECIFIES]->(solutions:IndustrySolutions) "
+            "RETURN tags.title as tags, areas.title as area, solutions.title as ind",
             word=word)
+
         for record in result:
-            people.append(record["name"])
-        return people
+            if record["tags"] not in tags:
+                tags.append(record["tags"])
+            if (record["area"]) not in area:
+                area.append(record["area"])
+            if (record["ind"]) not in ind:
+                ind.append(record["ind"])
+        data = {'Теги:': tags, 'Области экспертизы:': area, 'Отраслевые решения:': ind}
+        # return tags, area, ind
+        return data
